@@ -83,7 +83,7 @@ resource "google_compute_instance" "dep_k8s_controller" {
   }
 
   metadata = {
-    "startup-script" = file("startup-controller.sh")
+    "startup-script" = file("utils/startup-controller.sh")
   }
 }
 
@@ -103,7 +103,7 @@ resource "google_compute_instance_template" "dep_k8s_worker-template" {
   }
 
   metadata = {
-    "startup-script" = file("startup-worker.sh")
+    "startup-script" = file("utils/startup-worker.sh")
   }
 }
 
