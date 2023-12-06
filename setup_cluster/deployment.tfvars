@@ -1,5 +1,0 @@
-gcp_project_name = "ecocompass-project"
-deployment_name  = "ec2"
-region           = "europe-west1"
-zone             = "europe-west1-b"
-vpc_cidr         = "10.10.0.0/24"
