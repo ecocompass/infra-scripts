@@ -1,5 +1,8 @@
 ### Manual Setup
 
+> [!CAUTION]
+> Discontinued, use script instead. This is kept only as a reference.
+
 1. Setup up network objects and firewall rules in GCP
 2. Create 1 control node, and 2 worker VMs
 3. SSH to VMs and configure Kubernetes dependencies
