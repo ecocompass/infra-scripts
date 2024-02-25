@@ -87,6 +87,46 @@ resource "google_compute_instance" "dep_k8s_controller" {
   }
 }
 
+resource "google_compute_disk" "dep_db_disk" {
+  name  = "${var.deployment_name}-db-disk"
+  type  = "pd-standard"
+  size  = 10
+  zone  = var.zone
+}
+
+resource "google_compute_attached_disk" "default" {
+  disk     = google_compute_disk.dep_db_disk.id
+  instance = google_compute_instance.dep_db.id
+}
+
+resource "google_compute_instance" "dep_db" {
+  name         = "${var.deployment_name}-db"
+  project      = var.gcp_project_name
+  zone         = var.zone
+  machine_type = "e2-custom-medium-4096"
+  boot_disk {
+    initialize_params {
+      size  = "32"
+      image = "ubuntu-os-cloud/ubuntu-2004-lts"
+    }
+  }
+
+  can_ip_forward = true
+  network_interface {
+    network    = google_compute_network.dep_vpc.self_link
+    subnetwork = google_compute_subnetwork.dep_subnet_main.self_link
+    access_config {}
+  }
+
+  metadata = {
+    "startup-script" = file("utils/startup-db.sh")
+  }
+
+  lifecycle {
+    ignore_changes = [attached_disk]
+  }
+}
+
 resource "google_compute_instance_template" "dep_k8s_worker-template" {
   name         = "${var.deployment_name}-k8s-worker-template"
   project      = var.gcp_project_name
