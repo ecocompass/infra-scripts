@@ -68,7 +68,7 @@ resource "google_compute_instance" "dep_k8s_controller" {
   name         = "${var.deployment_name}-k8s-controller"
   project      = var.gcp_project_name
   zone         = var.zone
-  machine_type = "e2-custom-medium-4096"
+  machine_type = "e2-small"
   boot_disk {
     initialize_params {
       size  = "32"
@@ -103,7 +103,7 @@ resource "google_compute_instance" "dep_db" {
   name         = "${var.deployment_name}-db"
   project      = var.gcp_project_name
   zone         = var.zone
-  machine_type = "e2-custom-medium-4096"
+  machine_type = "e2-small"
   boot_disk {
     initialize_params {
       size  = "32"
@@ -130,7 +130,7 @@ resource "google_compute_instance" "dep_db" {
 resource "google_compute_instance_template" "dep_k8s_worker-template" {
   name         = "${var.deployment_name}-k8s-worker-template"
   project      = var.gcp_project_name
-  machine_type = "e2-custom-medium-4096"
+  machine_type = "e2-custom-2-8192"
   disk {
     source_image = "ubuntu-os-cloud/ubuntu-2004-lts"
     disk_size_gb = 32
@@ -155,7 +155,7 @@ resource "google_compute_instance_group_manager" "dep_k8s_worker-group" {
   version {
     instance_template = google_compute_instance_template.dep_k8s_worker-template.self_link
   }
-  target_size = 2
+  target_size = 1
   named_port {
     name = "http"
     port = 30000

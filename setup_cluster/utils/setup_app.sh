@@ -1,8 +1,8 @@
 set -eu
 
 deploy_application() {
-    gcloud compute scp utils/servers.yaml $DEPLOYMENT_NAME-k8s-controller:~/ &>> $LOGFILE &
-    gcloud compute ssh $DEPLOYMENT_NAME-k8s-controller --command="sudo kubectl apply -f servers.yaml" &>> $LOGFILE &
+    gcloud compute scp --zone $ZONE utils/servers.yaml $DEPLOYMENT_NAME-k8s-controller:~/ &>> $LOGFILE &
+    gcloud compute ssh --zone $ZONE $DEPLOYMENT_NAME-k8s-controller --command="sudo kubectl apply -f servers.yaml" &>> $LOGFILE &
 }
 
 

@@ -1,21 +1,21 @@
-# core server
+# routing-engine server
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: core-server-deployment
+  name: routing-engine-server-deployment
 spec:
-  replicas: 4
+  replicas: 1
   selector:
     matchLabels:
-      app: core-server
+      app: routing-engine-server
   template:
     metadata:
       labels:
-        app: core-server
+        app: routing-engine-server
     spec:
       containers:
-      - name: core-server-container
-        image: rahulsingh14jan95/maps:mapengine-docker-image-0
+      - name: routing-engine-server-container
+        image: sakshidhingra/map-engine:24-03-2024
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
@@ -27,7 +27,7 @@ kind: Deployment
 metadata:
   name:  api-server-deployment
 spec:
-  replicas: 4
+  replicas: 2
   selector:
     matchLabels:
       app: api-server
@@ -38,33 +38,34 @@ spec:
     spec:
       containers:
       - name: api-server-container
-        image: anupalmishra/ecocompass-api-server:0.0.1
+        image: sakshidhingra/map-api:24-03-2024
         imagePullPolicy: Always
+        env:
+          - name: POSTGRES_HOST_NAME
+            value: "10.10.0.3"
+          - name: POSTGRES_PORT
+            value: "8086"
+          - name: POSTGRES_DATABASE
+            value: "postgres"
+          - name: POSTGRES_USER
+            value: "pastav"
+          - name: POSTGRES_PASSWORD
+            value: "Eco@123#24Postgres"
+          - name: JWT_SECRET_KEY
+            value: "ASE123Ecocompass@JWT"
+          - name: JWT_ACCESS_TOKEN_EXPIRE_HOURS
+            value: "1"
+          - name: REDIS_HOST_NAME
+            value: "10.10.0.3"
+          - name: REDIS_PORT
+            value: "6379"
+          - name: REDIS_DATABASE
+            value: "0"
+          - name: REDIS_PASSWORD
+            value: "Eco@123#24Redis"
         ports:
-        - containerPort: 8080
-          
-# async consumer
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name:  async-consumer-deployment
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: async-consumer
-  template:
-    metadata:
-      labels:
-        app: async-consumer
-    spec:
-      containers:
-      - name: async-consumer-container
-        image: anupalmishra/ecocompass-async-consumer:0.0.1
-        imagePullPolicy: Always
+        - containerPort: 6969
 
-# test pod
 ---
 apiVersion: v1
 kind: Pod
@@ -77,22 +78,22 @@ spec:
       command: ["sleep", "infinity"]
 
 ---
-# link api-server pods with core-server pods using service
+# link api-server pods with routing-engine-server pods using service
 apiVersion: v1
 kind: Service
 metadata:
-  name: core-service
+  name: routing-engine-service
 spec:
   type: ClusterIP
   selector:
-    app: core-server
+    app: routing-engine-server
   ports:
     - name: http
       protocol: TCP
       port: 80
       targetPort: 8080
 
-# nodePort service to expose api-servers on public IP
+# nodePort service to expose routing-engine-servers on public IP
 ---
 apiVersion: v1
 kind: Service
@@ -105,129 +106,6 @@ spec:
   ports:
     - name: http
       protocol: TCP
-      port: 80
-      targetPort: 8080
+      port: 8080
+      targetPort: 6969
       nodePort: 30000
-
-# mongodb
----
-apiVersion: apps/v1
-kind: StatefulSet
-metadata:
-  name: mongodb
-spec:
-  serviceName: "mongodb"
-  replicas: 1  # Adjust as needed
-  selector:
-    matchLabels:
-      app: mongodb
-  template:
-    metadata:
-      labels:
-        app: mongodb
-    spec:
-      containers:
-      - name: mongodb
-        image: mongo
-        ports:
-        - containerPort: 27017
-
-# mongodb service
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: mongodb-service
-spec:
-  clusterIP: None
-  selector:
-    app: mongodb
-  ports:
-  - protocol: TCP
-    port: 27017
-
-# rabbitmq
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: rabbitmq
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: rabbitmq
-  template:
-    metadata:
-      labels:
-        app: rabbitmq
-    spec:
-      containers:
-      - name: rabbitmq
-        image: rabbitmq:latest
-        env:
-          - name: RABBITMQ_DEFAULT_USER
-            value: "admin"
-          - name: RABBITMQ_DEFAULT_PASS
-            value: "A1dmin@23*Eco"
-        ports:
-          - containerPort: 5672
-            name: amqp
-          - containerPort: 15672
-            name: management
-
-# rabbitmq service
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: rabbitmq-service
-spec:
-  selector:
-    app: rabbitmq
-  ports:
-    - protocol: TCP
-      port: 5672
-      targetPort: 5672
-      name: amqp
-    - protocol: TCP
-      port: 15672
-      targetPort: 15672
-      name: management
-  type: ClusterIP
-
-# redis
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: redis-deployment
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: redis
-  template:
-    metadata:
-      labels:
-        app: redis
-    spec:
-      containers:
-      - name: redis
-        image: redis:latest
-        ports:
-        - containerPort: 6379
-
-# redis service
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: redis-service
-spec:
-  selector:
-    app: redis
-  ports:
-  - protocol: TCP
-    port: 6379
-    targetPort: 6379
